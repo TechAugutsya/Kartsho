@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "794182096568",
+    "project_id": "kartsho-4e848",
+    "storage_bucket": "kartsho-4e848.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:794182096568:android:8b83d0203c25cc6082c64d",
+        "android_client_info": {
+          "package_name": "com.example.kartsho"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4_uobVMHZaP7DIYtyPsdWuzw5eKUZv_Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
