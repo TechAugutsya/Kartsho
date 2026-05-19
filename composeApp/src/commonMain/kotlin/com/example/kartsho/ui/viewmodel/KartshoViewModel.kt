@@ -82,13 +82,11 @@ class KartshoViewModel(private val repository: IKartshoRepository) : ViewModel()
         name: String,
         email: String,
         password: String
-    ): String? {
-        var errorResult: String? = null
+    ) {
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
             val (user, error) = repository.authenticate(mode, role, name, email, password)
             if (error != null) {
-                errorResult = error
                 _state.update { it.copy(loading = false, banner = error) }
             } else if (user != null) {
                 val nextSection = when (user.role) {
@@ -108,7 +106,6 @@ class KartshoViewModel(private val repository: IKartshoRepository) : ViewModel()
                 refreshData()
             }
         }
-        return errorResult
     }
 
     fun addProduct(

@@ -104,7 +104,11 @@ fun KartshoApp(viewModel: KartshoViewModel) {
                     .padding(padding)
             ) {
                 if (state.session == null) {
-                    AuthScreen(onSubmit = viewModel::authenticate)
+                    AuthScreen(
+                        isLoading = state.loading,
+                        errorMessage = state.banner,
+                        onSubmit = viewModel::authenticate
+                    )
                 } else {
                     HomeScreen(
                         state = state,

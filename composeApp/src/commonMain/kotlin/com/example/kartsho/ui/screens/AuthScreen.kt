@@ -30,13 +30,16 @@ import com.example.kartsho.domain.model.AuthMode
 import com.example.kartsho.domain.model.UserRole
 
 @Composable
-fun AuthScreen(onSubmit: (AuthMode, UserRole, String, String, String) -> String?) {
+fun AuthScreen(
+    isLoading: Boolean,
+    errorMessage: String?,
+    onSubmit: (AuthMode, UserRole, String, String, String) -> Unit
+) {
     var mode by remember { mutableStateOf(AuthMode.Login) }
     var role by remember { mutableStateOf(UserRole.Buyer) }
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -111,7 +114,8 @@ fun AuthScreen(onSubmit: (AuthMode, UserRole, String, String, String) -> String?
                         value = name,
                         onValueChange = { name = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("👤 Full name") }
+                        label = { Text("👤 Full name") },
+                        enabled = !isLoading
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                 }
@@ -120,28 +124,35 @@ fun AuthScreen(onSubmit: (AuthMode, UserRole, String, String, String) -> String?
                     value = email,
                     onValueChange = { email = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("✉️ Email") }
+                    label = { Text("✉️ Email") },
+                    enabled = !isLoading
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("🔑 Password") }
+                    label = { Text("🔑 Password") },
+                    enabled = !isLoading
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
-                        error = onSubmit(mode, role, name, email, password)
+                        onSubmit(mode, role, name, email, password)
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 ) {
-                    Text(if (mode == AuthMode.Login) "Enter workspace" else "Create account")
+                    if (isLoading) {
+                        Text("⏳ Processing...")
+                    } else {
+                        Text(if (mode == AuthMode.Login) "Enter workspace" else "Create account")
+                    }
                 }
 
-                error?.let {
+                errorMessage?.let {
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = it,
