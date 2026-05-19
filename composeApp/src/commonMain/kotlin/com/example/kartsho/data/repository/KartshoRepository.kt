@@ -18,7 +18,7 @@ interface KmpSettings {
     fun remove(key: String)
 }
 
-class StockbrokerRepository(
+class KartshoRepositoryImpl(
     private val dao: KartshoDao,
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
@@ -133,7 +133,7 @@ class StockbrokerRepository(
             startingPrice = 4999.0,
             currentBid = 6899.0,
             currentBidderName = "Maya Buyer",
-            endAtMillis = seedTime + 2_460_000L,
+            endAtMillis = seedTime + 10_800_000L, // 3 hours from now
             supplierName = "Rohan Supplier",
             approved = true,
             bidHistory = listOf(
@@ -150,7 +150,7 @@ class StockbrokerRepository(
             startingPrice = 9999.0,
             currentBid = 9999.0,
             currentBidderName = null,
-            endAtMillis = seedTime + 5_860_000L,
+            endAtMillis = seedTime + 12_600_000L, // 3.5 hours from now
             supplierName = "Asha Supplies",
             approved = true,
             bidHistory = emptyList(),
@@ -164,7 +164,7 @@ class StockbrokerRepository(
             startingPrice = 45000.0,
             currentBid = 52500.0,
             currentBidderName = "Aman Trader",
-            endAtMillis = seedTime + 4_800_000L,
+            endAtMillis = seedTime + 14_400_000L, // 4 hours from now
             supplierName = "Asha Supplies",
             approved = true,
             bidHistory = listOf(

@@ -41,10 +41,14 @@ import com.example.kartsho.domain.model.*
 import com.example.kartsho.ui.screens.*
 import com.example.kartsho.ui.state.*
 import com.example.kartsho.ui.viewmodel.KartshoViewModel
+import com.example.kartsho.util.LocalImagePicker
+import com.example.kartsho.util.KartshoBackHandler
+import com.example.kartsho.di.AppModule
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.request.crossfade
 import coil3.network.ktor3.KtorNetworkFetcherFactory
+import androidx.compose.runtime.CompositionLocalProvider
 
 @Composable
 fun KartshoApp(viewModel: KartshoViewModel) {
@@ -57,70 +61,74 @@ fun KartshoApp(viewModel: KartshoViewModel) {
             .build()
     }
 
-    val state by viewModel.state.collectAsState()
-    val session = state.session
-    val snackbarHostState = remember { SnackbarHostState() }
+    CompositionLocalProvider(LocalImagePicker provides AppModule.imagePicker) {
+        val state by viewModel.state.collectAsState()
+        val session = state.session
+        val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(state.banner) {
-        val message = state.banner ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(message)
-        viewModel.dismissBanner()
-    }
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            if (session != null) {
-                DemoTopBar(
-                    session = session,
-                    section = state.section,
-                    cartCount = state.cart.size,
-                    onOpenCart = { viewModel.toggleCartDialog(true) },
-                    onLogout = viewModel::logout
-                )
-            }
-        },
-        bottomBar = {
-            if (session != null && state.selectedProductId == null) {
-                DemoBottomBar(
-                    session = session,
-                    section = state.section,
-                    onSectionChange = viewModel::setSection
-                )
-            }
+        LaunchedEffect(state.banner) {
+            val message = state.banner ?: return@LaunchedEffect
+            snackbarHostState.showSnackbar(message)
+            viewModel.dismissBanner()
         }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(padding)
-        ) {
-            if (state.session == null) {
-                AuthScreen(onSubmit = viewModel::authenticate)
-            } else {
-                HomeScreen(
-                    state = state,
-                    viewModel = viewModel
-                )
 
-                if (state.showCartDialog) {
-                    CartDialog(
-                        cart = state.cart,
-                        onDismiss = { viewModel.toggleCartDialog(false) },
-                        onRemoveItem = viewModel::removeFromCart,
-                        onCheckout = { viewModel.startCheckout(null, fromCart = true) }
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                if (session != null) {
+                    DemoTopBar(
+                        session = session,
+                        section = state.section,
+                        cartCount = state.cart.size,
+                        showBackButton = state.selectedProductId != null,
+                        onBack = { viewModel.selectProduct(null) },
+                        onOpenCart = { viewModel.toggleCartDialog(true) },
+                        onLogout = viewModel::logout
                     )
                 }
-
-                if (state.checkoutProduct != null || state.checkoutCart) {
-                    val total = if (state.checkoutCart) state.cart.sumOf { it.price } else null
-                    CheckoutDialog(
-                        product = state.checkoutProduct,
-                        cartTotal = total,
-                        onDismiss = viewModel::cancelCheckout,
-                        onConfirmOrder = viewModel::confirmOrder
+            },
+            bottomBar = {
+                if (session != null && state.selectedProductId == null) {
+                    DemoBottomBar(
+                        session = session,
+                        section = state.section,
+                        onSectionChange = viewModel::setSection
                     )
+                }
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(padding)
+            ) {
+                if (state.session == null) {
+                    AuthScreen(onSubmit = viewModel::authenticate)
+                } else {
+                    HomeScreen(
+                        state = state,
+                        viewModel = viewModel
+                    )
+
+                    if (state.showCartDialog) {
+                        CartDialog(
+                            cart = state.cart,
+                            onDismiss = { viewModel.toggleCartDialog(false) },
+                            onRemoveItem = viewModel::removeFromCart,
+                            onCheckout = { viewModel.startCheckout(null, fromCart = true) }
+                        )
+                    }
+
+                    if (state.checkoutProduct != null || state.checkoutCart) {
+                        val total = if (state.checkoutCart) state.cart.sumOf { it.price } else null
+                        CheckoutDialog(
+                            product = state.checkoutProduct,
+                            cartTotal = total,
+                            onDismiss = viewModel::cancelCheckout,
+                            onConfirmOrder = viewModel::confirmOrder
+                        )
+                    }
                 }
             }
         }
@@ -133,10 +141,19 @@ private fun DemoTopBar(
     session: User,
     section: AppSection,
     cartCount: Int,
+    showBackButton: Boolean,
+    onBack: () -> Unit,
     onOpenCart: () -> Unit,
     onLogout: () -> Unit
 ) {
     TopAppBar(
+        navigationIcon = {
+            if (showBackButton) {
+                androidx.compose.material3.IconButton(onClick = onBack) {
+                    Text("⬅️")
+                }
+            }
+        },
         title = {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -212,6 +229,18 @@ private fun HomeScreen(
     state: KartshoState,
     viewModel: KartshoViewModel
 ) {
+    val isDialogVisible = state.showCartDialog || state.checkoutProduct != null || state.checkoutCart
+    val isNotAtRoot = isDialogVisible || state.selectedProductId != null || state.section != AppSection.Shop
+    
+    KartshoBackHandler(enabled = isNotAtRoot) {
+        when {
+            state.checkoutProduct != null || state.checkoutCart -> viewModel.cancelCheckout()
+            state.showCartDialog -> viewModel.toggleCartDialog(false)
+            state.selectedProductId != null -> viewModel.selectProduct(null)
+            state.section != AppSection.Shop -> viewModel.setSection(AppSection.Shop)
+        }
+    }
+
     if (state.selectedProductId != null) {
         val selectedProduct = state.products.firstOrNull { it.id == state.selectedProductId }
         if (selectedProduct != null) {

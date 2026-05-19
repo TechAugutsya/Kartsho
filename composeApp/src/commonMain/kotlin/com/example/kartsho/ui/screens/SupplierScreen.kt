@@ -22,7 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.kartsho.ui.state.KartshoState
-import com.example.kartsho.util.rememberImagePickerLauncher
+import com.example.kartsho.util.LocalImagePicker
 
 @Composable
 fun SupplierScreen(
@@ -35,7 +35,7 @@ fun SupplierScreen(
     var imageUrl by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
-    val imagePicker = rememberImagePickerLauncher { uri ->
+    val imagePicker = LocalImagePicker.current.rememberLauncher { uri ->
         if (uri != null) {
             imageUrl = uri
         }

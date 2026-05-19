@@ -5,8 +5,10 @@ import com.example.kartsho.IosSettings
 import com.example.kartsho.data.local.KartshoDatabase
 import com.example.kartsho.data.local.KartshoDatabaseConstructor
 import com.example.kartsho.data.local.getRoomDatabase
-import com.example.kartsho.data.repository.ZeerostockRepository
+import com.example.kartsho.data.repository.KartshoRepositoryImpl
 import com.example.kartsho.domain.repository.IKartshoRepository
+import com.example.kartsho.util.ImagePicker
+import com.example.kartsho.util.IosImagePicker
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
@@ -23,11 +25,13 @@ actual object AppModule {
     }
 
     actual val repository: IKartshoRepository by lazy {
-        ZeerostockRepository(
+        KartshoRepositoryImpl(
             dao = database.zeerostockDao(),
             auth = Firebase.auth,
             firestore = Firebase.firestore,
             settings = IosSettings()
         )
     }
+
+    actual val imagePicker: ImagePicker by lazy { IosImagePicker() }
 }
